@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../lib/vue.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/index.css">
+    <script type="text/javascript" src="../lib/index.js"></script>
+    <script src="../lib/jquery.min.js"></script>
+<!--    <script src="../static/lib/axios.min.js"></script>-->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/all.css">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="app">
+    <el-container>
+        <el-header>
+            车间工单看板
+        </el-header>
+        <el-main>
+            <el-table :data="tableData" border style="width: 100%" :cell-style="cellStyle">
+                <el-table-column prop="wid" label="id"  v-if="show"> </el-table-column>
+                <el-table-column prop="wline" label="生产线" min-width="120"> </el-table-column>
+                <el-table-column prop="wnum" label="工号编码" min-width="120"> </el-table-column>
+                <el-table-column prop="worder" label="产品名称" min-width="120"> </el-table-column>
+                <el-table-column prop="wamount" label="工单数量" min-width="120"> </el-table-column>
+                <el-table-column prop="wcumulative_complete" label="累计完成" min-width="120"> </el-table-column>
+                <el-table-column prop="wcompleted_today" label="今日完成" min-width="120"> </el-table-column>
+                <el-table-column prop="wschedule" label="生产进度"min-width="120"> </el-table-column>
+                <el-table-column prop="wstate" label="状态" min-width="120">
+                    <template slot-scope="scope">
+                        <span v-if="scope.row.wstate== -1" >未开工</span>
+                        <span v-if="scope.row.wstate== 0" >生产中</span>
+                        <span v-if="scope.row.wstate == 1" >已处理</span>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-main>
+        <el-footer style="display: flex; flex-direction: row; font-size: 18px; ">
+            <span class="s1">总出勤人数：{{sum}}人</span>
+            <span class="s1">当日总产出：{{totalproudct}}台</span>
+            <span class="s1">累计产出工时：{{totaltime}}时</span>
+            <span class="s1">生产效率：{{prouducttime}}%</span>
+        </el-footer>
+    </el-container>
+
+</div>
+<script>
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            show:false,
+            sum:0,
+            totalproudct:2000,
+            totaltime:66,
+            prouducttime:60,
+            tableData: [],
+
+        },
+        methods: {
+
+            getData() {
+                axios.all([
+                    axios.get('/workshop/getWorkshop').then((res) => {
+                        this.tableData = res.data.data;
+                    }),
+                     axios.get('/workshop/getWsum').then((res) => {
+                         this.sum = res.data.data;
+                    }),
+                    axios.get('/workshop/getwcompletedToday').then((res) => {
+                        this.totalproudct = res.data.data;
+                    })
+                ])
+            },
+
+            cellStyle(row,column,rowIndex,columIndex) {
+                // console.log(row)
+                if ((row.row.wstate == 1) && (row.column.label == '状态')) {
+                    return 'background-color: #00E466;'
+                }
+                if ((row.row.wstate == -1) && (row.column.label == '状态')) {
+                    return 'background-color: #F49FAC;'
+                }
+                if ((row.row.wstate == 0) && (row.column.label == '状态')) {
+                    return 'background-color: #FFFF00;'
+                }
+            }
+        },
+        created() {
+            this.getData();
+            // this.getSum();
+        },
+        computed: {
+        }
+    })
+</script>
+<style>
+    .s1{
+        padding: 20px 14% 0 0;
+        font-weight: 800;
+    }
+    .el-header {
+        height: 12%;
+        background-color: #1238FB;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 6rem;
+        font-weight: 800;
+    }
+
+    .el-table th {
+        background-color: #657bff;
+        color: white;
+    }
+
+    .el-table td,
+    .el-table th {
+        padding: 8px 0;
+    }
+
+    .el-table__body,
+    .el-table__header,.el-table--border td{
+        border: 1px solid #0573C1;
+    }
+
+    .el-main {
+
+        padding: 2px 20px 20px 20px;
+    }
+</style>
+</body>
+
+</html>

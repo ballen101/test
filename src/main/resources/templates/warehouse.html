@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../lib/vue.js"></script>
+    <link rel="stylesheet" type="text/css" href="../lib/index.css">
+    <script type="text/javascript" src="../lib/index.js"></script>
+    <script src="../lib/jquery.min.js"></script>
+        <script src="../lib/axios.min.js"></script>
+<!--    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
+<!--    <link rel="stylesheet" type="text/css" href="../css/all.css">-->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="app">
+    <el-container>
+        <el-header style="background-color: #19A6B6; display: flex;align-items: center; ">
+            <i class="el-icon-back" style="color: white; font-size: 1.2rem ;"></i>
+            <span style="color: white;font-size: 1.1rem;padding-left: 16px; font-weight: 500;width:13%">返回首页</span>
+            <span
+                    style="color: white;font-size: 1.8rem; font-weight: 800;margin: 0 auto;width: 17%;">成品仓库库存查询</span>
+            <span id="time" style="color:white;font-size: 1rem;padding-right: 5px;"></span>
+            <el-avatar :size="30" :src="circleUrl"></el-avatar><span
+                style="color:white;font-size: 1rem;padding:0 5px 0 5px;">admin</span>
+            <img src="img/退出.svg" style="width: 16px;" @click="open" />
+            <el-button type="text" @click="open" style="color:white;font-size: 1rem;padding-left: 5px;">退出
+            </el-button>
+        </el-header>
+        <el-header>
+            <el-tabs v-model="activeName" @tab-click="handleClick">
+                <el-tab-pane label="物料查询" name="first">
+                    <el-header style="display: flex;align-items: center;height: 70px;">
+                        <el-form :inline="true" :model="formInline" class="demo-form-inline">
+                            <el-form-item label="物料编码">
+                                <el-input v-model="formInline.id" placeholder="物料编码"></el-input>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onSubmit">拣料查询</el-button>
+                                <el-button type="primary" @click="selectAll">查询所有物料</el-button>
+                            </el-form-item>
+                            <span class="s1">储位总数:510个</span>
+                            <span class="s1">空闲储位:{{freeslstorage}}个</span>
+                            <span class="s1">储位利用率:{{slstoragerate}}%</span>
+                            <span class="s1">拣料存位:{{slpicking}}个</span>
+                        </el-form>
+                    </el-header>
+                    <el-tabs v-model="activeName1" type="card" @tab-click="handleClick1">
+                        <el-tab-pane label="图形式" name="first">用户管理</el-tab-pane>
+                        <el-tab-pane label="列表式" name="second">
+                            <el-table :data="tableData" border style="width: 100%" >
+                                <el-table-column prop="slid" label="id" v-if="show"> </el-table-column>
+                                <el-table-column prop="slnum" label="物料编码" min-width="120"> </el-table-column>
+                                <el-table-column prop="slname" label="物料名称" min-width="120"> </el-table-column>
+                                <el-table-column prop="slsize" label="物料规格" min-width="120"> </el-table-column>
+                                <el-table-column prop="slstock" label="总库存" min-width="120"> </el-table-column>
+                                <el-table-column prop="slavailable" label="可用量" min-width="120"> </el-table-column>
+                                <el-table-column prop="slstorage" label="储位" min-width="120">  </el-table-column>
+                                <el-table-column prop="wh.whname" label="仓库" min-width="120">
+                                </el-table-column>
+                            </el-table>
+                        </el-tab-pane>
+                    </el-tabs>
+                </el-tab-pane>
+            </el-tabs>
+        </el-header>
+    </el-container>
+</div>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            totdalslstorage: 6000,
+            freeslstorage: 50,
+            slstoragerate: 40,
+            slpicking: 1,
+            show:false,
+            circleUrl: "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
+            activeName: 'first',
+            activeName1: 'second',
+            formInline: {
+                id:"",
+            },
+            tableData: [],
+        },
+        methods: {
+            selectAll(){
+                axios.get('storageloaction/getStorageloaction').then((res) => {
+                    this.tableData = res.data.data;
+                })
+            },
+            onSubmit() {
+                console.log(this.formInline.id)
+                axios.get('/storageloaction/getlikeStorageloaction/' + this.formInline.id).then((res) => {
+                    if (res.data.code == 0) {
+                        this.tableData = res.data.data;
+                    }
+                    if (res.data.code == 1) {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            getData() {
+                axios.all([
+                    axios.get('storageloaction/getStorageloaction').then((res) => {
+                        this.tableData = res.data.data;
+                    }),
+                    axios.get('storageloaction/getSumSlstorage').then((res) => {
+                        this.totdalslstorage = res.data.data;
+                    }),
+                    axios.get('storageloaction/getSumStockAvailable').then((res) => {
+                        this.freeslstorage= res.data.data;
+                    }),
+                    axios.get('storageloaction/getSumSlstoragerate').then((res) => {
+                        this.slstoragerate= res.data.message;
+                    }),
+                    axios.get('storageloaction/getSlpicking').then((res) => {
+                        this.slpicking= res.data.data;
+                    }),
+                ])
+            },
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+            handleClick1(tab, event) {
+                console.log(tab, event);
+            },
+            open() {
+                this.$confirm('确定要退出, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                    center: true
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: ''
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: ''
+                    });
+                });
+            },
+            timer() {
+                // 查询日期
+                var date = new Date()
+                let m =
+                    date.getMonth() + 1 < 10
+                        ? "0" + (date.getMonth() + 1)
+                        : date.getMonth() + 1; //月
+                let d = date.getDate() < 10 ? "0" + date.getDate() : date.getDate(); //日
+                let h = date.getHours(); //时
+                let min = date.getMinutes(); //分
+                if (h > -1 && h < 10) {
+                    h = '0' + h
+                }
+                if (min > -1 && min < 10) {
+                    min = '0' + min
+                }
+                var year = date.getFullYear();
+                var time = h + ':' + min
+                document.getElementById("time").innerHTML = year + '-' + m + '-' + d + '-' + time;
+                setTimeout("show()", 30000); //设置过1000毫秒就是1秒，调用show方法
+            }
+        },
+        created() {
+            this.timer()
+            this.getData()
+        },
+        computed: {
+        }
+    })
+</script>
+<style>
+    div {
+        /* border: 1px solid black; */
+    }
+
+    .s1 {
+        width: 30%;
+        height: 70px;
+        line-height: 35px;
+        font-size: 14px;
+        padding-left: 50px;
+        font-weight: 800;
+    }
+    .el-table th {
+        background-color: #5E75BA;
+        color: white;
+    }
+
+    .el-table td,
+    .el-table th {
+        padding: 8px 0;
+    }
+
+    .el-table__body,
+    .el-table__header,.el-table--border td{
+        border: 1px solid #0573C1;
+    }
+</style>
+</body>
+
+</html>

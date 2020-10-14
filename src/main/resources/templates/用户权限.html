@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../static/lib/vue.js"></script>
+    <script src="../static/lib/axios.min.js"></script>
+    <script src="../static/lib/token.js"></script>
+    <link rel="stylesheet" href="../static/lib/index.css">
+    <script src="../static/lib/index.js"></script>
+
+    <title>设置用户权限</title>
+
+<body>
+    <div id="app">
+        <el-container style="background: #F6FAFF;">
+            <el-aside width="49%">
+                <el-container>
+                    <el-header
+                        style="margin:10px;padding:10px 10px;height:200px;background:#fff;border-radius:10px;box-shadow: 0 2px 12.8px rgba(0, 0, 0, 0.1)">
+                        <span style="color:#101010;font-size:16px;font-weight: bold;">1.请输入组织或账号查询用户</span><br><br>
+                        <span>组织：</span>
+                        <el-input type="text" v-model="form0.OrgName" placeholder="请输入组织名称" style="width:200px"
+                            size="small" @keyup.enter.native="searchUp"></el-input>
+                        <span style="margin-left:10px">账户：</span>
+                        <el-input type="text" v-model="form0.Account" placeholder="请输入账户" style="width:200px"
+                            size="small" @keyup.enter.native="searchUp"></el-input>
+                        <el-table border :data="leftUpData" height="100px" :cell-class-name="tableRowClassName"
+                            class="left" style="margin-top:10px">
+                            <el-table-column prop="Account" label="账号" min-width="120"></el-table-column>
+                            <el-table-column prop="UserName" label="姓名" min-width="120"></el-table-column>
+                            <el-table-column prop="OrgName" label="组织" min-width="120"></el-table-column>
+                            <el-table-column prop="State" label="状态" min-width="120"></el-table-column>
+                        </el-table>
+                    </el-header>
+                    <el-main
+                        style="margin:10px 10px 10px 10px;padding:10px 10px;background:#fff;border-radius:10px;box-shadow: 0 2px 12.8px rgba(0, 0, 0, 0.1)">
+                        <span style="color:#101010;font-size:16px;font-weight: bold;">2.勾选配置模块对应角色信息</span><br><br>
+                        <el-button class="leftHeader" @click="changeActive(item.activeName)"
+                            :class="activeName==item.activeName?'active0':''" v-for="(item,index) in btn" :key="index"
+                            :value="index">
+                            {{item.label}}
+                        </el-button>
+                        <span style="margin:5px 0 0 15px;">角色：</span>
+                        <el-input type="text" v-model="form1.Player" placeholder="请输入角色名称"
+                            style="width:200px;margin-top:5px;" size="small" @keyup.enter.native="searchRight">
+                        </el-input>
+                        <el-table border ref="multipleTable" stripe :data="leftDownData" style="margin-top:10px"
+                            class="left" @selection-change="handleSelectionChange" :height="tableHeight2" @row-click="rowClick"
+                            :cell-class-name="tableRowClassName">
+                            <el-table-column type="selection" width="55">
+                            </el-table-column>
+                            <el-table-column prop="Model" label="模块" min-width="120"> </el-table-column>
+                            <el-table-column prop="Player" label="角色名称" min-width="120"></el-table-column>
+                            <el-table-column prop="PlayerDescribe" label="角色描述" min-width="120"></el-table-column>
+                            <el-table-column prop="UserNumber" label="用户数" min-width="120"></el-table-column>
+                        </el-table>
+                        <el-button
+                            style="float:right;margin:5px 0px;background:#6ea1ff;border:1px solid #6ea1ff;color:#fff;"
+                            size="small" @click="saveConfig">保存配置</el-button>
+                    </el-main>
+                </el-container>
+            </el-aside>
+            <el-main
+                style="margin:10px 10px 10px 0px;padding:10px 10px;background:#fff;border-radius:10px;box-shadow: 0 2px 12.8px rgba(0, 0, 0, 0.1)">
+                <span style="color:#101010;font-size:16px;font-weight: bold;">查询用户权限配置</span> <span
+                    style="color:red;font-size:14px;margin-left:10px">温馨提示：双击带到左表进行编辑</span><br><br>
+                <el-input type="text" v-model="form2.UserMessage" placeholder="请输入用户账号/姓名" style="width:200px"
+                    size="small" @keyup.enter.native="searchRight"></el-input>
+                <span style="margin-left:10px">模块：</span>
+                <el-select v-model="form2.Module" @change="searchRight" size="small">
+                    <el-option v-for="(item,index) in options" :key="index" :value="item.value">
+                        {{item.label}}
+                    </el-option>
+                </el-select>
+                <span style="margin-left:10px">角色：</span>
+                <el-input type="text" v-model="form2.Player" placeholder="请输入角色名称" style="width:200px" size="small"
+                    @keyup.enter.native="searchRight">
+                </el-input>
+                <el-table border stripe :data="rightData" :height="tableHeight" :cell-class-name="tableRowClassName"
+                    class="right" style="margin-top:10px">
+                    <el-table-column prop="Account" label="账号" min-width="110"> </el-table-column>
+                    <el-table-column prop="UserName" label="姓名" min-width="110"></el-table-column>
+                    <el-table-column prop="OrgName" label="组织" min-width="110"></el-table-column>
+                    <el-table-column prop="Module" label="模块" min-width="100"></el-table-column>
+                    <el-table-column prop="Player" label="角色" min-width="100"></el-table-column>
+                    <el-table-column prop="State" label="状态" min-width="100"></el-table-column>
+                    <el-table-column prop="CreatedName" label="配置人员" min-width="100"></el-table-column>
+                    <el-table-column prop="CreatedTime" label="配置时间" min-width="110"></el-table-column>
+                    <el-table-column prop="CreatedTime" label="操作" min-width="100">
+                        <template slot-scope="scope">
+                            <el-button type="danger" @click="deleteRow(scope.row)" icon="el-icon-delete" circle>
+                            </el-button>
+                        </template>
+                    </el-table-column>
+
+                </el-table>
+            </el-main>
+        </el-container>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: "#app",
+        components: {
+
+        },
+        data: {
+            tableHeight: window.innerHeight - 145 + 'px',
+            tableHeight2: window.innerHeight - 405 + 'px',
+            form0: {
+                OrgName: "",
+                Account: ""
+            },
+            form1: {
+                Player: ""
+            },
+            form2: {
+                UserMessage: "",
+                Module: "",
+                Player: ""
+            },
+            options: [{ label: "APS", value: '1' }, { label: "SCM", value: '2' }, { label: "WMS", value: '3' }, { label: "MES", value: '4' }],
+            leftUpData: [],
+            leftDownData: [{Model:'APS',Player:"管理员"},{Model:'APS',Player:"普通用户"}],
+            rightData: [{Model:'APS'}],
+            activeName: 0,
+            btn: [
+                {
+                    label: 'APS',
+                    activeName: 0
+                },
+                {
+                    label: 'SCM',
+                    activeName: 1
+                },
+                {
+                    label: 'WMS',
+                    activeName: 2
+                },
+                {
+                    label: 'MES',
+                    activeName: 3
+                }
+            ],
+            multipleSelection: [] //选框的数据
+        },
+        created() {
+        },
+        computed: {
+        },
+        methods: {
+            // 切换模块
+            changeActive(activeName) {
+                this.activeName = activeName;
+                // 更新表格
+                axiosPostRequst(``, )
+                    .then(function (res) {
+                        if (res.result) {
+                            this.leftDownData = res.data               
+                        } else {
+                            _this.$message.error('' + res.msg + '')
+                        }
+                    });
+            },
+            // 保存配置
+            saveConfig() {
+
+            },
+            // 选择操作
+            // 选择操作
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            // 查询左上接口
+            searchUp() {
+                debugger
+                axiosPostRequst(``, this.form0)
+                    .then(function (res) {
+                        if (res.result) {
+                            this.leftUpData = res.data               
+                        } else {
+                            _this.$message.error('' + res.msg + '')
+                        }
+                    });
+            },
+            // 查询左下接口
+            searchDown() {
+                axiosPostRequst(``, this.form1)
+                    .then(function (res) {
+                        if (res.result) {
+                            this.leftDownData = res.data               
+                        } else {
+                            _this.$message.error('' + res.msg + '')
+                        }
+                    });
+            },
+            // 查询右边接口
+            searchRight() {
+                axiosPostRequst(``, this.form2)
+                    .then(function (res) {
+                        if (res.result) {
+                            this.rightData = res.data               
+                        } else {
+                            _this.$message.error('' + res.msg + '')
+                        }
+                    });
+            },
+            // 删除角色信息
+            deleteRow(row) {
+                axiosPostRequst(``, row)
+                    .then(function (res) {
+                        if (res.result) {
+                            //重新获取右侧角色信息
+                            axiosPostRequst(``, )
+                                .then(function (res) {
+                                    if (res.result) {
+                                        //重新获取右侧角色信息
+
+                                    } else {
+                                        _this.$message.error('' + res.msg + '')
+                                    }
+                                });
+                        } else {
+                            _this.$message.error('' + res.msg + '')
+                        }
+                    });
+            },
+            // 单击行
+            rowClick(row){
+            this.$refs.multipleTable.toggleRowSelection(row)
+            },
+            // 改变状态颜色
+            tableRowClassName({ row, column, rowIndex, columnIndex }) {
+                column.index = columnIndex;
+                if (row[column.property] == "已启用") {
+                    return "blueColor";
+                } else if (row[column.property] == "未启用") {
+                    return "infoColor";
+                }
+            }
+        },
+        mounted() {
+        },
+        watch: {
+        }
+    })
+    const _this = app
+</script>
+<style>
+    .blueColor {
+        color: #409EFF;
+        font-weight: bold;
+    }
+
+    .infoColor {
+        color: #909399;
+        font-weight: bold;
+    }
+
+    .leftHeader {
+        display: block;
+        width: 100px;
+        height: 35px;
+        border: 1px solid #939393;
+        float: left;
+        color: #000000;
+        font-size: 16px;
+        text-align: center;
+        padding-top: 7px;
+        border-radius: 0 !important;
+        margin-top: 3px;
+        float: left;
+    }
+
+    .el-button+.el-button {
+        margin-left: 0;
+    }
+
+    .active0 {
+        color: #5591FF !important;
+        border: 1.5px solid #5591FF !important;
+    }
+
+    .el-table td {
+        padding: 5px 0;
+        border-right: 1px solid #C8C8C8;
+    }
+
+    .el-table th.is-leaf {
+        padding: 6px 0;
+        border-right: 1px solid #C8C8C8;
+        border-bottom: 1px solid #C8C8C8
+    }
+
+    .el-table {
+        border: 1px solid #C8C8C8
+    }
+
+    .left th {
+        background: #a1b1c1;
+        color: #fff;
+    }
+
+    .right th {
+        background: #6ea1ff;
+        color: #fff;
+    }
+    .el-table .cell{
+        text-align:center
+    }
+</style>
+
+</html>

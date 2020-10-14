@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<script type="text/javascript" src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+    <script src="../static/lib/vue.js"></script>
+    <!-- <link rel="stylesheet" type="text/css" href="./lib/index.css"> -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script type="text/javascript" src="../static/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="../static/lib/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/css/roleAssignment.css">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <div class="all">
+
+            </el-switch>
+            <div class="top"><img width="4%" style="padding-left: 5%;padding-right: 1%;" src="../static/img/权限管理.png" />设置用户权限
+            </div>
+            <div class="content">
+                <div class="content-top-all">
+                    <div class="content-top">设置用户权限</div>
+                    <div class="icon">
+                        <el-button type="text" @click="open"><img src="../static/img/删除.png" class="i1" id="i1" />
+                        </el-button>
+                    </div>
+                </div>
+                <div class="content-bottom">
+                    <div class="left">
+                        <div class="left-top">
+                            <div class="left-top-title">
+                                角色名：
+                            </div>
+                            <div class="search" style="margin-right: 2%;">
+                                <input class="search1" type="text" placeholder="输入角色名称" onFocus="if (value =='输入角色名称'){value =''}" onBlur="if (value ==''){value='输入角色名称'}" v-model="role" />
+                                <img src="../static/img/search.png" style="width:18% ;height: 100%;" @click="sear()">
+                            </div>
+                            <div class="left-top-title">
+                                系统：
+                            </div>
+                            <el-select v-model="value" @change="selectSys(value)" placeholder="请选择系统">
+                                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                                </el-option>
+                            </el-select>
+                            <div class="add">
+                                <el-button type="text" @click="dialogFormVisible = true">
+                                    <i class="el-icon-plus"></i>
+                                    <a href="#">新增角色</a>
+                                </el-button>
+                                <el-dialog title="新增/编辑角色" :visible.sync="dialogFormVisible" class="dialog">
+                                    <el-form ref="form" :model="form">
+                                        <el-form-item label="角色名称" label-width="10rem">
+                                            <el-input v-model="form.name"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="角色描述" label-width="10rem">
+                                            <el-input type="textarea" v-model="form.describe"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="系统权限" label-width="10rem">
+                                            <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange"></el-checkbox-group>
+                                            <el-checkbox v-for="city in cities" :label="city" :key="city">{{city}}
+                                            </el-checkbox>
+                                            </el-checkbox-group>
+                                            <!-- <el-checkbox-group v-model="form.root">
+                                                <el-checkbox label="ASP(排产管理系统)" name="root"></el-checkbox>
+                                                <el-checkbox label="SCM(供应链管理系统)" name="root"></el-checkbox>
+                                                <el-checkbox label="WMS（仓库管理系统)" name="root"></el-checkbox>
+                                                <el-checkbox label="MES(生产管理系统)" name="root"></el-checkbox>
+                                            </el-checkbox-group> -->
+                                        </el-form-item>
+                                        <el-form-item>
+                                            <el-button type="primary" @click="onSubmit" style="width:100%">保存
+                                            </el-button>
+                                        </el-form-item>
+                                    </el-form>
+                                </el-dialog>
+                            </div>
+                        </div>
+                        <div class="left-bottom">
+                            <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName" @selection-change="handleSelectionChange">
+                                <el-table-column type="selection" width="55">
+                                </el-table-column>
+                                <el-table-column prop="id" label="角色ID">
+                                </el-table-column>
+                                <el-table-column prop="name" label="角色名称">
+                                </el-table-column>
+                                <el-table-column prop="describe" label="角色描述">
+                                </el-table-column>
+                                <el-table-column prop="root" label="系统权限">
+                                </el-table-column>
+                                <el-table-column prop="emp" label="关联人员">
+                                </el-table-column>
+                                <el-table-column prop="operation" label="操作" width="155">>
+                                    <template slot-scope="scope">
+                                        <el-switch style="display: block;" v-model="scope.row.State"
+                                            @change="change(scope.row.State)" active-color="#13ce66"
+                                            inactive-color="#ff4949" active-text="启用" inactive-text="禁用">
+                                        </el-switch>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage4" :page-sizes="[100, 200, 300, 400]" :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="400">
+                            </el-pagination>
+                        </div>
+                        <div class="left-button">
+                            <el-button type="primary">添加关联人员</el-button>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <div class="right-top">
+                            <div class="left-top-title">
+                                关联人员
+                            </div>
+                            <div class="choose">
+                                <el-select style="width: 100%; height: 100%;" @change="changeProduct" v-model="orgin" placeholder="选择组织名称">
+                                    <el-option v-for="(item,index) in org" :key="index" :value='item.id' :label='item.title'>
+                                    </el-option>
+                                </el-select>
+                                <!-- <select  class="fl" v-model="ProductActive"  @change="changeProduct($event)" >
+                                        <option v-for="(item,index) in productList" :key="index" :value='item.id'>{{item.title}}</option>  
+                                   </select>  -->
+                            </div>
+                            <div class="search">
+                                <input class="search1" type="text" placeholder="输入工号/姓名" onFocus="if (value =='输入工号/姓名'){value =''}" onBlur="if (value ==''){value='输入工号/姓名'}" v-model="topname" @click="sear1()" />
+                                <img src="../static/img/search.png" style="width:18% ;height: 100%;">
+                            </div>
+                        </div>
+                        <div class="right-bottom">
+                            <div class="right-bottom-top">
+                                <div class="right-bottom-top-left">
+                                    <el-table :data="tableData1" border style="width: 100%" :row-class-name="tableRowClassName" @selection-change="changeFun">
+                                        <el-table-column type="selection" width="55">
+                                        </el-table-column>
+                                        <el-table-column prop="id" label="工号">
+                                        </el-table-column>
+                                        <el-table-column prop="name" label="姓名">
+                                        </el-table-column>
+                                        <el-table-column prop="account" label="账号">
+                                        </el-table-column>
+                                        <el-table-column prop="oname" label="组织名称">
+                                        </el-table-column>
+                                        <el-table-column prop="operation" label="操作">
+                                            <a href="#">编辑</a>&nbsp;<a href="#">删除</a>
+                                        </el-table-column>
+                                    </el-table>
+                                    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage4" :page-sizes="[100, 200, 300, 400]" :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="400">
+                                    </el-pagination>
+                                </div>
+                                <div class="right-bottom-top-right">
+                                    <el-button type="primary" @click="aa()">保存</el-button>
+                                </div>
+                            </div>
+                            <div class="right-top">
+                                <div class="left-top-title">
+                                    添加人员
+                                </div>
+                                <div class="choose">
+                                    <el-select @change="changeOrg" v-model="orgin1" placeholder="选择组织名称">
+                                        <el-option v-for="(item,index) in org" :key="index" :value='item.id' :label='item.title'>
+                                        </el-option>
+                                    </el-select>
+                                </div>
+                                <div class="search">
+                                    <input class="search1" type="text" placeholder="输入工号/姓名" onFocus="if (value =='输入工号/姓名'){value =''}" onBlur="if (value ==''){value='输入工号/姓名'}" v-model="bottomname" />
+                                    <img src="../static/img/search.png" style="width:18% ;height: 100%;" @click="sear2()">
+                                </div>
+                            </div>
+                            <div class="right-bottom-top">
+                                <div class="right-bottom-top">
+                                    <div class="right-bottom-top-left">
+
+                                        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage4" :page-sizes="[100, 200, 300, 400]" :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="400">
+                                        </el-pagination>
+                                    </div>
+                                    <div class="right-bottom-top-right">
+                                        <el-button type="primary" @click="bb()">保存</el-button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const cityOptions = ['ASP(排产管理系统)', '(供应链管理系统)', '（仓库管理系统)', '(生产管理系统)'];
+        var app = new Vue({
+            el: "#app",
+            data: {
+                orgin: "",
+                orgin1: "",
+                role: " ",
+                topname: "",
+                bottomname: "",
+                currentPage1: 5,
+                currentPage2: 5,
+                currentPage3: 5,
+                currentPage4: 4,
+                swi: true,
+                value: "",
+                checkBoxData: [], //多选框选择的值
+                checkid1: [],
+                checkid2: [],
+                cities: cityOptions,
+                isIndeterminate: true,
+                formInline: {
+                    user: '',
+                    region: ''
+                },
+                org: [{
+                    id: 1,
+                    title: '一车间'
+                }, {
+                    id: 2,
+                    title: '三车间'
+                }, {
+                    id: 3,
+                    title: '精品车间'
+                }],
+                options: [{
+                    value: '1',
+                    label: 'ASP(排产管理系统)'
+                }, {
+                    value: '2',
+                    label: 'SCM(供应链管理系统)'
+                }, {
+                    value: '3',
+                    label: 'WMS（仓库管理系统)'
+                }, {
+                    value: '4',
+                    label: 'MES(生产管理系统)'
+                }],
+                dialogFormVisible: false,
+                form: {
+                    name: '',
+                    describe: '',
+                    root: '',
+
+                    delivery: false,
+                    type: [],
+                    resource: '',
+                    desc: ''
+                },
+                formLabelWidth: '120px',
+                tableData: [],
+                tableD1: [{
+                    id: '110',
+                    name: '白11',
+                    describe: '11',
+                    root: '管理员',
+                    emp: '白冷冷',
+                    State: false,
+
+                }],
+                tableD2: [{
+                    id: '110',
+                    name: '白22',
+                    describe: '11',
+                    root: '管理员',
+                    emp: '白冷冷',
+                    State: false,
+
+                }],
+                tableD3: [{
+                    id: '110',
+                    name: '白33',
+                    describe: '11',
+                    root: '管理员',
+                    emp: '白冷冷',
+                    State: false,
+
+                }],
+                tableD4: [{
+                    id: '110',
+                    name: '白55',
+                    describe: '11',
+                    root: '管理员',
+                    emp: '白冷冷',
+                    State: false,
+
+                }],
+                tableData1: [],
+                tableData2: [],
+                tab1: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                tab2: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                tab3: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                tab4: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                table1: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                table2: [{
+                    id: '110',
+                    name: '白',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                table3: [{
+                    id: '110',
+                    name: '大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+                table4: [{
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }, {
+                    id: '110',
+                    name: '白大大',
+                    account: '11',
+                    oname: '管理员',
+                }],
+            },
+
+            methods: {
+                //获取已经关联的人员
+                changeFun(val) {
+                    this.checkBoxData = val;
+                    console.log(this.checkBoxData.length)
+                    for (var i = 0; i < this.checkBoxData.length; i++) {
+                        this.checkid1[i] = this.checkBoxData[i].id
+                        console.log(this.checkid1[i])
+                    }
+                },
+                // 获取已经关联的人员
+                aa() {
+                    let data = this.checkid1
+                    alert(data)
+                    axios.post('/user', {
+                            data
+                        })
+                        .then(function(response) {
+                            console.log(response);
+                        })
+                        .catch(function(error) {
+                            console.log(error);
+                        })
+                },
+
+                //启用相应的系统对角色进行操作
+                change(state) {
+
+                    if (this.value == '1' && state) {
+                        this.tableData1 = this.table1
+                        this.tableData2 = this.tab1
+                            // console.log(this.tableData1)
+                    }
+                    if (this.value == '2' && state) {
+                        this.tableData1 = this.table2
+                        this.tableData2 = this.tab2
+                    }
+                    if (this.value == '3' && state) {
+                        this.tableData1 = this.table3
+                        this.tableData2 = this.tab3
+                    }
+                    if (this.value == '4' && state) {
+                        this.tableData1 = this.table4
+                        this.tableData2 = this.tab4
+                    }
+                    if (!state) {
+                        this.tableData1 = []
+                        this.tableData2 = []
+                    }
+
+                },
+                checkedCities() {},
+                handleSelectionChange(val) {
+                    this.checkBoxData = val;
+                    console.log(this.checkBoxData.length)
+                    for (var i = 0; i < this.checkBoxData.length; i++) {
+                        this.checkid2[i] = this.checkBoxData[i].id
+                        console.log(this.checkid2[i])
+                    }
+
+                },
+                // 人员
+                bb() {
+                    let data = this.checkid2
+                    axios.post('/user', {
+                            data
+                        })
+                        .then(function(response) {
+                            console.log(response);
+                        })
+                        .catch(function(error) {
+                            console.log(error);
+                        })
+                },
+                handleSizeChange() {},
+                handleCurrentChange() {},
+                // currentPage4() { },
+                // currentPage(){},
+                //最底部选择组织
+                changeOrg(val) {
+                    //获取option对应的value值
+                    console.log("你选中了", val)
+                },
+                //选择组织
+                changeProduct(val) {
+                    //获取option对应的value值
+                    console.log("你选中了", val)
+                },
+                //选定系统 出现相应的角色（后台数据）
+                selectSys(val) {
+                    // console.log("系统："+ this.tableData[0].State)
+                    if (val == "1") {
+                        this.tableData = this.tableD1
+                        this.tableData[0].State = false
+
+                    }
+                    if (val == "2") {
+                        this.tableData = this.tableD2
+                        this.tableData[0].State = false
+
+                    }
+                    if (val == "3") {
+                        this.tableData = this.tableD3
+                        this.tableData[0].State = false
+
+                    }
+                    if (val == "4") {
+                        this.tableData = this.tableD4
+                        this.tableData[0].State = false
+                        console.log(this.tableData[0].State)
+
+                    }
+
+                    if (this.val == '1' && this.tableData[0].State) {
+                        this.tableData1 = this.table1
+                        console.log(this.tableData1)
+                    }
+                    if (this.val == '2' && this.tableData[0].State) {
+                        this.tableData1 = this.table2
+                    }
+                    if (this.val == '3' && this.tableData[0].State) {
+                        this.tableData1 = this.table3
+                    }
+                    if (this.val == '4' && this.tableData[0].State) {
+                        this.tableData1 = this.table4
+                    }
+                    if (!this.tableData[0].state) {
+                        this.tableData1 = []
+                        this.tableData2 = []
+                    }
+                },
+                //获取角色的名称进行搜索
+                sear() {
+                    console.log(this.role)
+                },
+                //获取搜索关联的人员姓名
+                sear1() {
+                    console.log(this.topname)
+                },
+                // 获取搜索添加的人员姓名
+                sear2() {
+                    console.log(this.bottomname)
+                },
+                handleCheckedCitiesChange(value) {
+                    let checkedCount = value.length;
+                    this.checkAll = checkedCount === this.cities.length;
+                    this.isIndeterminate = checkedCount > 0 && checkedCount < this.cities.length;
+                },
+                tableRowClassName({
+                    row,
+                    rowIndex
+                }) {
+                    if (rowIndex % 2 === 1) {
+                        return 'warning-row';
+                    }
+                    return '';
+                },
+                onSubmit() {
+                    // console.log('submit!');
+                },
+                open() {
+                    this.$confirm('确定要关闭吗, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });
+                    });
+                }
+
+            },
+            created() {},
+            computed: {}
+        })
+    </script>
+    <style>
+        div {
+            margin: 0;
+            /* border: 1px solid black; */
+        }
+    </style>
+</body>
+
+</html>

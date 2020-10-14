@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./lib/vue.js"></script>
+    <link rel="stylesheet" type="text/css" href="./lib/index.css">
+    <script type="text/javascript" src="./lib/index.js"></script>
+    <script src="./lib/jquery.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/all.css">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="app">
+    <el-container>
+        <el-header style=" height: 12%;  background-color: #1238FB; display: flex; justify-content: center; align-items: center; color: white;
+                   font-size: 6rem; font-weight: 800;">
+            车间工单看板
+        </el-header>
+        <el-main>
+            <el-table :data="tableData" border style="width: 100%" :cell-style="cellStyle">
+                <el-table-column prop="wsid" label="id" v-if="show"> </el-table-column>
+                <el-table-column prop="wsline" label="生产线" min-width="120"> </el-table-column>
+                <el-table-column prop="wsorder" label="工单号" min-width="120"> </el-table-column>
+                <el-table-column prop="wsprid" label="产品编码" min-width="120"> </el-table-column>
+                <el-table-column prop="wsprname" label="产品名称" min-width="120"> </el-table-column>
+                <el-table-column prop="wsprtime" label="交货期" min-width="120"> </el-table-column>
+                <el-table-column prop="wsstartime" label="开工时间" min-width="120"> </el-table-column>
+                <el-table-column prop="wsendtime" label="完成时间" min-width="120"> </el-table-column>
+                <el-table-column prop="wsprogress" label="进度" min-width="120"> </el-table-column>
+                <el-table-column prop="wsstate" label="状态" min-width="120">
+                    <template slot-scope="scope">
+                        <span v-if="scope.row.wsstate== -1" >未开工</span>
+                        <span v-if="scope.row.wsstate== 0" >生产中</span>
+                        <span v-if="scope.row.wsstate == 1" >已处理</span>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-main>
+        <el-header
+                style="font-size:4rem ;font-weight: 800;display: flex; justify-content: center; align-items: center; ">
+            工单各工序进度明细</el-header>
+        <el-main style="display:flex; display:flex;flex-wrap:wrap;justify-content: center;">
+            <div class="d1" v-for="(item,index) in progresses">
+                <div class="pname" v-if="item.pprogress== 100" style="background-color: #00B050;">{{item.pname}}</div>
+                <div class="pname" v-if="(item.pprogress!=100)&&(item.pprogress!=0)" style="background-color: #FF9800;">{{item.pname}}</div>
+                <div class="pname" v-if="item.pprogress==0" style="background-color: #7F7F7F;">{{item.pname}}</div>
+                <div class="pprogress">{{item.pprogress}}%</div>
+                <div class="pprogress">
+                    <span v-if="item.pprogress== 100">完成</span>
+                    <span v-if="(item.pprogress!=100)&&(item.pprogress!=0)">进行中</span>
+                    <span v-if="item.pprogress==0">未开始</span>
+                </div>
+            </div>
+        </el-main>
+    </el-container>
+
+</div>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: {
+            show: false,
+            tableData: [],
+            progresses: [],
+
+
+        },
+        methods: {
+            getData() {
+                axios.all([
+                    axios.get('/workshopprogress/getWorkshopprogress').then((res) => {
+                        this.tableData = res.data.data;
+                    }),
+                    axios.get('/progresses/getPrrogresses').then((res) => {
+                        this.progresses = res.data.data;
+                    }),
+                ])
+            },
+            cellStyle(row, column, rowIndex, columIndex) {
+                console.log(row.row.wsstate)
+                if ((row.row.wsstate == 1) && (row.column.label == '状态')) {
+                    return 'background-color: #00E466;'
+                }
+                if ((row.row.wsstate == -1) && (row.column.label == '状态')) {
+                    return 'background-color: #F49FAC;'
+                }
+                if ((row.row.wsstate == 0) && (row.column.label == '状态')) {
+                    return 'background-color: #FFFF00;'
+                }
+            }
+
+        },
+        created() {
+            this. getData()
+
+        },
+        computed: {
+        }
+    })
+</script>
+<style>
+    .s1 {
+        padding: 20px 14% 0 0;
+
+    }
+
+    .d1 {
+        /* border: 1px solid black; */
+        width: 130px;
+        height: 200px;
+        margin-left: 10px;
+        margin-top: 20px;
+    }
+
+    .pname {
+        border: 1px solid black;
+        width: 100%;
+        height: 33%;
+        display: flex;
+        color: white;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+
+    }
+
+    .pprogress {
+        border: 1px solid black;
+        width: 100%;
+        height: 33.3%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+    }
+
+    .el-table th {
+        background-color: #657BFF;
+        color: white;
+    }
+
+    .el-table td,
+    .el-table th {
+        padding: 8px 0;
+    }
+
+    .el-table__body,
+    .el-table__header,.el-table--border td{
+        border: 1px solid #0573C1;
+    }
+    .el-main {
+
+        padding: 2px 20px 20px 20px;
+    }
+</style>
+</body>
+
+</html>
